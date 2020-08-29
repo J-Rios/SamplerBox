@@ -14,18 +14,22 @@
 # CONFIG
 #########################################
 
-AUDIO_DEVICE_ID = 2                     # change this number to use another soundcard
-SAMPLES_DIR = "."                       # The root directory containing the sample-sets. Example: "/media/" to look for samples on a USB stick / SD card
-USE_SERIALPORT_MIDI = False             # Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
-USE_I2C_7SEGMENTDISPLAY = False         # Set to True to use a 7-segment display via I2C
-USE_BUTTONS = False                     # Set to True to use momentary buttons (connected to RaspberryPi's GPIO pins) to change preset
-MAX_POLYPHONY = 80                      # This can be set higher, but 80 is a safe value
-
+AUDIO_DEVICE_ID = "default"       # change this number to use another soundcard
+SAMPLES_DIR = "./samples"         # The root directory containing the sample-sets. Example: "/media/" to look for samples on a USB stick / SD card
+USE_SERIALPORT_MIDI = False       # Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
+USE_I2C_7SEGMENTDISPLAY = False   # Set to True to use a 7-segment display via I2C
+USE_BUTTONS = False               # Set to True to use momentary buttons (connected to RaspberryPi's GPIO pins) to change preset
+USE_KEYBOARD = True               # Set to true to use keyboard '+' and '-' to increase/decrease presets
+MAX_POLYPHONY = 80                # This can be set higher, but 80 is a safe value
+DEBUG = False
 
 #########################################
 # IMPORT
 # MODULES
 #########################################
+
+#import pyximport
+#pyximport.install()
 
 import wave
 import time
@@ -38,7 +42,76 @@ from chunk import Chunk
 import struct
 import rtmidi2 as rtmidi
 import samplerbox_audio
+from sys import argv as sys_argv
+from signal import signal, SIGTERM, SIGINT
+from traceback import format_exc as traceback_format_exc
 
+####################################################################################################
+
+### Termination Signals Handler For Program Process ###
+
+def signal_handler(signal,  frame):
+    '''Termination signals (SIGINT, SIGTERM) handler for program process'''
+    print("Exit")
+    exit(0)
+
+
+### Signals attachment ###
+signal(SIGTERM, signal_handler) # SIGTERM (kill pid) to signal_handler
+signal(SIGINT, signal_handler)  # SIGINT (Ctrl+C) to signal_handler
+
+####################################################################################################
+
+### Check for input arguments ###
+
+argv = sys_argv[1:]
+argc = len(sys_argv)-1
+for arg in argv:
+    if arg == "debug":
+        DEBUG = True
+    elif arg == "devices":
+        print(sounddevice.query_devices())
+        exit(0)
+    else:
+        try:
+            AUDIO_DEVICE_ID = int(arg)
+        except ValueError:
+            print(sounddevice.query_devices())
+            exit(0)
+
+####################################################################################################
+
+### Debug Function ###
+
+def _debug(text):
+    if DEBUG:
+        print(text)
+
+####################################################################################################
+
+### Preset Change Functions ###
+
+def set_preset(num):
+    global preset
+    if num < 0:
+        num = 0
+    preset = num
+    print("\nPreset: {}".format(preset))
+    LoadSamples()
+
+
+def preset_reduce():
+    global preset
+    preset = preset - 1
+    set_preset(preset)
+
+
+def preset_increase():
+    global preset
+    preset = preset + 1
+    set_preset(preset)
+
+####################################################################################################
 
 #########################################
 # SLIGHT MODIFICATION OF PYTHON'S WAVE MODULE
@@ -190,11 +263,19 @@ def AudioCallback(outdata, frame_count, time_info, status):
 def MidiCallback(message, time_stamp):
     global playingnotes, sustain, sustainplayingnotes
     global preset
+    _debug("{} - {}\n".format(time_stamp, message))
     messagetype = message[0] >> 4
-    messagechannel = (message[0] & 15) + 1
+    #messagechannel = (message[0] & 15) + 1
     note = message[1] if len(message) > 1 else None
     midinote = note
     velocity = message[2] if len(message) > 2 else None
+
+    # Control Preset
+    if messagetype == 14:
+        if velocity == 0:
+            preset_reduce()
+        elif velocity == 126:
+            preset_increase()
 
     if messagetype == 9 and velocity == 0:
         messagetype = 8
@@ -295,8 +376,8 @@ def ActuallyLoad():
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ', '').replace('%', '').split(',')]))
                     pattern = pattern.split(',')[0]
                     pattern = re.escape(pattern.strip())
-                    pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)")\
-                                     .replace(r"\%notename", r"(?P<notename>[A-Ga-g]#?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
+                    pattern = pattern.replace(r"%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)")\
+                                     .replace(r"%notename", r"(?P<notename>[A-Ga-g]#?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
                         if LoadingInterrupt:
                             return
@@ -351,12 +432,39 @@ def ActuallyLoad():
 #########################################
 
 try:
-    sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512, samplerate=44100, channels=2, dtype='int16', callback=AudioCallback)
+    sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512, 
+            samplerate=44100, channels=2, dtype='int16', callback=AudioCallback)
     sd.start()
     print("Opened audio device #{}".format(AUDIO_DEVICE_ID))
 except Exception:
+    print("\n[ERROR] {}".format(traceback_format_exc()))
     print("Invalid audio device #{}".format(AUDIO_DEVICE_ID))
     exit(1)
+
+
+#########################################
+# KEYBOARD THREAD (NEEDS ROOT)
+#
+#########################################
+if USE_KEYBOARD:
+    from keyboard import read_key as keyboard_read_key
+
+    def Keyboard():
+        global preset
+        try:
+            while True:
+                if keyboard_read_key() == '-':
+                    preset_reduce()
+                elif keyboard_read_key() == '+':
+                    preset_increase()
+                time.sleep(0.350)
+        except ImportError:
+            print("You need to be root to use keyboard")
+
+
+    KeyboardThread = threading.Thread(target=Keyboard)
+    KeyboardThread.daemon = True
+    KeyboardThread.start()
 
 
 #########################################
@@ -491,3 +599,4 @@ while True:
                 print("Reopening MIDI port: {}".format(port))
             prev_ports = curr_ports
     time.sleep(2)
+
