@@ -1,17 +1,16 @@
-SamplerBox
-==========
+# SamplerBox
+
+**Note:** A fork of original SamplerBox updated for python3.
 
 An open-source audio sampler project based on RaspberryPi.
 
 Website: www.samplerbox.org
 
-![http://gget.it/flurexml/1.jpg](https://www.youtube.com/watch?v=yz7GZ8YOjTw)
+[![SamplerBox](https://gget.it/flurexml/1.jpg)](https://www.youtube.com/watch?v=yz7GZ8YOjTw)
 
-[Install](#install)
+## Install
 
-----
-
-SamplerBox works with the RaspberryPi's built-in soundcard, but it is recommended to use a USB DAC (such as [this 6€ one](http://www.ebay.fr/itm/1Pc-PCM2704-5V-Mini-USB-Alimente-Sound-Carte-DAC-decodeur-Board-pr-ordinateur-PC-/231334667385?pt=LH_DefaultDomain_71&hash=item35dc9ee479)) for better sound quality.
+SamplerBox works with the RaspberryPi's built-in soundcard, but it is recommended to use a USB DAC for better sound quality.
 
 1. Download SamplerBox:
 
@@ -39,22 +38,20 @@ SamplerBox works with the RaspberryPi's built-in soundcard, but it is recommende
 
 *(Optional)*  Modify `samplerbox.py`'s first lines if you want to change root directory for sample-sets, default soundcard, etc.
 
-[How to use it](#howto)
-----
+## How to use it
 
 See the [FAQ](http://www.samplerbox.org/faq) on www.samplerbox.org.
 
-[ISO image](#isoimage)
-----
+## ISO image
 
 The ready-to-use ISO images available on [www.samplerbox.org](http://www.samplerbox.org) are built with the help of a script that can be found in `isoimage/samplerbox_iso_maker.sh`.
 
-[About](#about)
-----
+## About
 
-Author : Joseph Ernest (twitter: [@JosephErnest](http:/twitter.com/JosephErnest), mail: [contact@samplerbox.org](mailto:contact@samplerbox.org))
+Author: Joseph Ernest  
+twitter: [\@JosephErnest](https://twitter.com/JosephErnest)  
+mail: [contact@samplerbox.org](mailto:contact@samplerbox.org))
 
-[License](#license)
-----
+## License
 
 [Creative Commons BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/)
