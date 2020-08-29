@@ -1,0 +1,5 @@
+setuptools==49.6.0
+PyAudio==0.2.11
+cffi==1.13.2
+sounddevice==0.3.15
+rtmidi-python==9.8.4

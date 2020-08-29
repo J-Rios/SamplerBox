@@ -5,51 +5,54 @@ An open-source audio sampler project based on RaspberryPi.
 
 Website: www.samplerbox.org
 
-[![](http://gget.it/flurexml/1.jpg)](https://www.youtube.com/watch?v=yz7GZ8YOjTw)
+![http://gget.it/flurexml/1.jpg](https://www.youtube.com/watch?v=yz7GZ8YOjTw)
 
 [Install](#install)
+
 ----
 
 SamplerBox works with the RaspberryPi's built-in soundcard, but it is recommended to use a USB DAC (such as [this 6€ one](http://www.ebay.fr/itm/1Pc-PCM2704-5V-Mini-USB-Alimente-Sound-Carte-DAC-decodeur-Board-pr-ordinateur-PC-/231334667385?pt=LH_DefaultDomain_71&hash=item35dc9ee479)) for better sound quality.
 
-1. Install the required dependencies (Python-related packages and audio libraries):
+1. Download SamplerBox:
 
-  ~~~
-  sudo apt-get update ; sudo apt-get -y install git python-dev python-pip python-numpy cython python-smbus portaudio19-dev libportaudio2 libffi-dev
-  sudo pip install rtmidi-python pyaudio cffi sounddevice
-  ~~~
+    ```bash
+      git clone https://github.com/J-Rios/SamplerBox.git
+      cd SamplerBox
+    ```
 
-2. Download SamplerBox and build it with: 
+2. Install the required dependencies:
 
-  ~~~
-  git clone https://github.com/josephernest/SamplerBox.git
-  cd SamplerBox ; sudo python setup.py build_ext --inplace
-  ~~~
+    ```bash
+    chmod +x install_requeriments
+    sudo ./install_requeriments
+    ```
 
-3. Run the soft with `python samplerbox.py`.
+3. Build SamplerBox:
 
-4. Play some notes on the connected MIDI keyboard, you'll hear some sound!  
+    ```bash
+    sudo python setup.py build_ext --inplace
+    ```
+
+4. Run the Sampler with `python samplerbox.py`.
+
+5. Play some notes on the connected MIDI keyboard, you'll hear some sound!
 
 *(Optional)*  Modify `samplerbox.py`'s first lines if you want to change root directory for sample-sets, default soundcard, etc.
-
 
 [How to use it](#howto)
 ----
 
 See the [FAQ](http://www.samplerbox.org/faq) on www.samplerbox.org.
 
-
 [ISO image](#isoimage)
 ----
 
 The ready-to-use ISO images available on [www.samplerbox.org](http://www.samplerbox.org) are built with the help of a script that can be found in `isoimage/samplerbox_iso_maker.sh`.
 
-
 [About](#about)
 ----
 
 Author : Joseph Ernest (twitter: [@JosephErnest](http:/twitter.com/JosephErnest), mail: [contact@samplerbox.org](mailto:contact@samplerbox.org))
-
 
 [License](#license)
 ----
